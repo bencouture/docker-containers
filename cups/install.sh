@@ -34,6 +34,7 @@ apt-get install -qy --force-yes cups cups-pdf whois hplip suld-driver-4.01.17 go
 curl -skL https://raw.github.com/tjfontaine/airprint-generate/master/airprint-generate.py /opt/airprint-generate.py -o /opt/airprint-generate.py
 chmod +x /opt/airprint-generate.py
 
+
 #########################################
 ##  FILES, SERVICES AND CONFIGURATION  ##
 #########################################
@@ -51,7 +52,18 @@ mkdir -p /etc/my_init.d
 cat <<'EOT' >/etc/my_init.d/config.sh
 #!/bin/bash
 
-mkdir -p /config/cups /config/spool /config/logs /config/cache /config/cups/ssl /config/cups/ppd /config/cloudprint
+mkdir -p /config/cups /config/spool /config/logs /config/cache /config/cups/ssl /config/cups/ppd /config/cloudprint /config/drivers
+
+# Install new drivers
+cd /config/drivers
+for d in *.deb ; do 
+  PKG_OK=$(dpkg-query -W --showformat='${Status}\n' ${d}|grep "install ok installed")
+  echo Checking for ${d}: $PKG_OK
+  if [ "" == "$PKG_OK" ]; then
+    echo "No ${d}. Setting up ${d}."
+    sudo apt-get --force-yes --yes install ${d}
+  fi
+done
 
 # Copy missing config files
 cd /etc/cups
